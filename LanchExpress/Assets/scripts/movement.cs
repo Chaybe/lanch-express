@@ -4,51 +4,83 @@ using UnityEngine.InputSystem;
 public class movement : MonoBehaviour
 {
     public float moveSpeed = 5f;
-    public float rotationSpeed = 360f; // graus por segundo
-    public float rotationStep = 90f;
-
-    private bool isMoving = false;
-    private Vector3 moveDirection;
-    private Quaternion targetRotation;
+    public float rotationSpeed = 100f; // graus por segundo
+    public GameObject GUIMenuMissoes;
+    private bool isMovingForward = false;
+    public int dano = 100;
+    private AudioSource motorAudio;
 
     void Start()
     {
-        moveDirection = transform.forward;
-        targetRotation = transform.rotation;
+        if (GUIMenuMissoes != null)
+            GUIMenuMissoes.SetActive(false);
+
+        motorAudio = GetComponent<AudioSource>();
+        if (motorAudio != null)
+            motorAudio.Stop();
     }
 
     void Update()
     {
         var keyboard = Keyboard.current;
 
-        if (keyboard.wKey.wasPressedThisFrame)
+        isMovingForward = keyboard.upArrowKey.isPressed;
+
+        bool isTurning = keyboard.leftArrowKey.isPressed || keyboard.rightArrowKey.isPressed;
+        bool isReversing = keyboard.downArrowKey.isPressed;
+
+        if ((isMovingForward || isTurning || isReversing) && motorAudio != null && !motorAudio.isPlaying)
         {
-            isMoving = true;
+            motorAudio.Play();
+        }
+        else if (!isMovingForward && !isTurning && !isReversing && motorAudio != null && motorAudio.isPlaying)
+        {
+            motorAudio.Pause();
         }
 
-        if (keyboard.sKey.wasPressedThisFrame)
+        if (keyboard.leftArrowKey.isPressed)
         {
-            isMoving = false;
+            transform.Rotate(Vector3.up, -rotationSpeed * Time.deltaTime);
         }
 
-        if (keyboard.aKey.wasPressedThisFrame)
+        if (keyboard.rightArrowKey.isPressed)
         {
-            targetRotation *= Quaternion.Euler(0, -rotationStep, 0);
+            transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
         }
 
-        if (keyboard.dKey.wasPressedThisFrame)
+        if (isMovingForward)
         {
-            targetRotation *= Quaternion.Euler(0, rotationStep, 0);
+            transform.position += transform.forward * moveSpeed * Time.deltaTime;
         }
 
-        // Rotação suave
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-        moveDirection = transform.forward;
-
-        // Movimento
-        if (isMoving)
+        if (keyboard.downArrowKey.isPressed)
         {
-            transform.position += moveDirection.normalized * moveSpeed * Time.deltaTime;
+            transform.position -= transform.forward * moveSpeed * Time.deltaTime;
         }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("missions_base_get"))
+        {
+            GUIMenuMissoes?.SetActive(true);
+        }
+        else if (collision.gameObject.CompareTag("city"))
+        {
+            if(dano <= 0)
+            {
+                Debug.Log("Game Over");
+            }
+            else
+            {
+                dano -= 50;
+                Debug.Log("Colisão com a cidade! Dano: " + dano);
+            }
+        }
+    }
+
+    public void FecharMenuMissoes()
+    {
+        GUIMenuMissoes?.SetActive(false);
     }
 }
