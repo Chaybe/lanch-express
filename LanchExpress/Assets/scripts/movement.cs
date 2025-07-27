@@ -8,16 +8,18 @@ public class movement : MonoBehaviour
     public GameObject GUIMenuMissoes;
     private bool isMovingForward = false;
     public int dano = 100;
-    private AudioSource motorAudio;
+    private AudioSource motorLigado;
+    private AudioSource motorDesligado;
+    public AudioSource buzina;
 
     void Start()
     {
         if (GUIMenuMissoes != null)
             GUIMenuMissoes.SetActive(false);
 
-        motorAudio = GetComponent<AudioSource>();
-        if (motorAudio != null)
-            motorAudio.Stop();
+        motorLigado = GetComponent<AudioSource>();
+        if (motorLigado != null)
+            motorLigado.Stop();
     }
 
     void Update()
@@ -29,13 +31,13 @@ public class movement : MonoBehaviour
         bool isTurning = keyboard.leftArrowKey.isPressed || keyboard.rightArrowKey.isPressed;
         bool isReversing = keyboard.downArrowKey.isPressed;
 
-        if ((isMovingForward || isTurning || isReversing) && motorAudio != null && !motorAudio.isPlaying)
+        if ((isMovingForward || isTurning || isReversing) && motorLigado != null && !motorLigado.isPlaying)
         {
-            motorAudio.Play();
+            motorLigado.Play();
         }
-        else if (!isMovingForward && !isTurning && !isReversing && motorAudio != null && motorAudio.isPlaying)
+        else if (!isMovingForward && !isTurning && !isReversing && motorLigado != null && motorLigado.isPlaying)
         {
-            motorAudio.Pause();
+            motorLigado.Pause();
         }
 
         if (keyboard.leftArrowKey.isPressed)
@@ -56,6 +58,11 @@ public class movement : MonoBehaviour
         if (keyboard.downArrowKey.isPressed)
         {
             transform.position -= transform.forward * moveSpeed * Time.deltaTime;
+        }
+
+        if (Keyboard.current.xKey.wasPressedThisFrame)
+        {
+            buzina.Play();
         }
     }
 
